@@ -11,8 +11,8 @@
 		<relativePath/>
 	</parent>
 
-	<groupId>com.gamesUP</groupId>
-	<artifactId>gamesUP</artifactId>
+	<groupId>com.gamesup</groupId>
+	<artifactId>gamesup-api</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>gamesUP</name>
 	<description>API du site de vente de jeux de société GamesUP</description>
@@ -94,6 +94,11 @@
 		<dependency>
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>

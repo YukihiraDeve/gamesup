@@ -1,0 +1,10 @@
+spring:
+  config:
+    activate:
+      on-profile: test
+  datasource:
+    generate-unique-name: true
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate

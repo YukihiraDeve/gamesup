@@ -28,3 +28,25 @@ Depuis ce dossier :
 ```
 
 Le projet cible explicitement Java 21. Les versions des dépendances Spring sont gérées par Spring Boot 3.3.4 ; les autres versions nécessaires au build sont déclarées dans `pom.xml`.
+
+## Configuration locale
+
+Le profil `local` est actif par défaut. Définir les paramètres de connexion avant de démarrer l'API :
+
+```bash
+export DATABASE_URL="<URL JDBC MySQL locale>"
+export DATABASE_USERNAME="<utilisateur MySQL local>"
+export DATABASE_PASSWORD="<mot de passe MySQL local>"
+export CORS_ALLOWED_ORIGINS="http://localhost:4200"
+export JWT_SECRET="<secret JWT local>"
+export FASTAPI_URL="http://localhost:8000"
+./mvnw spring-boot:run
+```
+
+Ces valeurs sont uniquement des exemples locaux. Aucun identifiant ni secret réel ne doit être ajouté au dépôt.
+
+Le profil `test` utilise une base H2 en mémoire indépendante de MySQL :
+
+```bash
+./mvnw test
+```

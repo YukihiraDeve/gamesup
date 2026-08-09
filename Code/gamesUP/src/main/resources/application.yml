@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: gamesup-api
+  profiles:
+    default: local
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+      - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+
+server:
+  port: ${SERVER_PORT:8080}
+
+gamesup:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}
+  jwt:
+    issuer: ${JWT_ISSUER:gamesup-api}
+    access-token-ttl: ${JWT_ACCESS_TOKEN_TTL:PT1H}
+    secret: ${JWT_SECRET:}
+  recommendation:
+    base-url: ${FASTAPI_URL:http://localhost:8000}
