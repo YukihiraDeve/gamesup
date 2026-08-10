@@ -3,10 +3,6 @@ spring:
     name: gamesup-api
   profiles:
     default: local
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
-      - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
   jpa:
     hibernate:
       ddl-auto: validate
@@ -23,6 +19,6 @@ gamesup:
   jwt:
     issuer: ${JWT_ISSUER:gamesup-api}
     access-token-ttl: ${JWT_ACCESS_TOKEN_TTL:PT1H}
-    secret: ${JWT_SECRET:}
+    secret: ${JWT_SECRET}
   recommendation:
     base-url: ${FASTAPI_URL:http://localhost:8000}

@@ -10,3 +10,7 @@ spring:
       ddl-auto: validate
   flyway:
     enabled: false
+
+gamesup:
+  jwt:
+    secret: test-only-signing-key-with-at-least-32-bytes
