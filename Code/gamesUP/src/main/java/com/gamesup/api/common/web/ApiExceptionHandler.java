@@ -23,10 +23,16 @@ import com.gamesup.api.common.application.exception.BusinessRuleViolationExcepti
 import com.gamesup.api.common.application.exception.ConflictException;
 import com.gamesup.api.common.application.exception.ExternalServiceException;
 import com.gamesup.api.common.application.exception.ForbiddenOperationException;
+import com.gamesup.api.common.application.exception.InvalidRequestException;
 import com.gamesup.api.common.application.exception.ResourceNotFoundException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+
+	@ExceptionHandler(InvalidRequestException.class)
+	ProblemDetail handleInvalidRequest(InvalidRequestException exception, HttpServletRequest request) {
+		return invalidRequest(exception.getMessage(), request);
+	}
 
 	@ExceptionHandler(ResourceNotFoundException.class)
 	ProblemDetail handleNotFound(ResourceNotFoundException exception, HttpServletRequest request) {

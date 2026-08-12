@@ -205,9 +205,16 @@ class AuthSecurityIntegrationTest {
 	}
 
 	@Test
-	void leavesFutureCatalogReadingPublic() throws Exception {
+	void leavesCatalogReadingPublic() throws Exception {
 		mockMvc.perform(get("/api/v1/games"))
-				.andExpect(status().isNotFound());
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.content").isArray())
+				.andExpect(jsonPath("$.page").value(0));
+
+		mockMvc.perform(get("/api/v1/games/999999"))
+				.andExpect(status().isNotFound())
+				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+				.andExpect(jsonPath("$.status").value(404));
 	}
 
 	@Test

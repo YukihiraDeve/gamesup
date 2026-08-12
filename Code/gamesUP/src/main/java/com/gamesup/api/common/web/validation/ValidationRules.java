@@ -9,6 +9,7 @@ public final class ValidationRules {
 	public static final int PASSWORD_MIN_LENGTH = 12;
 	public static final int PASSWORD_MAX_LENGTH = 72;
 	public static final int PERSON_NAME_MAX_LENGTH = 100;
+	public static final int CATALOG_NAME_MAX_LENGTH = 150;
 	public static final int RESOURCE_NAME_MAX_LENGTH = 200;
 	public static final int COMMENT_MAX_LENGTH = 2000;
 

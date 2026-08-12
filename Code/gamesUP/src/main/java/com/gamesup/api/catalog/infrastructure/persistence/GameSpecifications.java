@@ -32,12 +32,12 @@ public final class GameSpecifications {
 			Join<Game, Author> authors = root.join("authors", JoinType.LEFT);
 			Join<Game, Publisher> publisher = root.join("publisher", JoinType.LEFT);
 			query.distinct(true);
-			String pattern = "%" + normalizedText + "%";
+			String pattern = "%" + escapeLikePattern(normalizedText) + "%";
 
 			return builder.or(
-					builder.like(builder.lower(root.<String>get("name")), pattern),
-					builder.like(authors.<String>get("normalizedName"), pattern),
-					builder.like(publisher.<String>get("normalizedName"), pattern));
+					builder.like(builder.lower(root.<String>get("name")), pattern, '\\'),
+					builder.like(authors.<String>get("normalizedName"), pattern, '\\'),
+					builder.like(publisher.<String>get("normalizedName"), pattern, '\\'));
 		};
 	}
 
@@ -67,5 +67,12 @@ public final class GameSpecifications {
 			}
 			return builder.conjunction();
 		};
+	}
+
+	private static String escapeLikePattern(String value) {
+		return value
+				.replace("\\", "\\\\")
+				.replace("%", "\\%")
+				.replace("_", "\\_");
 	}
 }
