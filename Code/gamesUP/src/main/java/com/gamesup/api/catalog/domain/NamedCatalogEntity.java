@@ -45,6 +45,10 @@ public abstract class NamedCatalogEntity {
 		normalizedName = CatalogNameNormalizer.normalizedName(value);
 	}
 
+	public void rename(String newName) {
+		setNames(newName);
+	}
+
 	public Long getId() {
 		return id;
 	}

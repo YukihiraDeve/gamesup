@@ -128,6 +128,37 @@ public class Game {
 		name = CatalogNameNormalizer.displayName(name);
 	}
 
+	public void update(
+			String name,
+			String description,
+			BigDecimal price,
+			int minPlayers,
+			int maxPlayers,
+			int minAge,
+			int durationMinutes,
+			int editionNumber,
+			Publisher publisher,
+			Set<Author> authors,
+			Set<Category> categories) {
+		this.name = CatalogNameNormalizer.displayName(name);
+		this.description = description;
+		this.price = price;
+		this.minPlayers = minPlayers;
+		this.maxPlayers = maxPlayers;
+		this.minAge = minAge;
+		this.durationMinutes = durationMinutes;
+		this.editionNumber = editionNumber;
+		this.publisher = publisher;
+		this.authors.clear();
+		this.authors.addAll(authors);
+		this.categories.clear();
+		this.categories.addAll(categories);
+	}
+
+	public void archive() {
+		active = false;
+	}
+
 	@AssertTrue(message = "maxPlayers must be greater than or equal to minPlayers")
 	public boolean isPlayerRangeValid() {
 		return maxPlayers >= minPlayers;

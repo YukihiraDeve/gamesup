@@ -10,4 +10,10 @@ import com.gamesup.api.catalog.domain.Game;
 public interface GameRepository extends JpaRepository<Game, Long>, JpaSpecificationExecutor<Game> {
 
 	Optional<Game> findByIdAndActiveTrue(Long id);
+
+	boolean existsByPublisherId(Long publisherId);
+
+	boolean existsByAuthorsId(Long authorId);
+
+	boolean existsByCategoriesId(Long categoryId);
 }
