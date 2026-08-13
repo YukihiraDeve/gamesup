@@ -105,6 +105,20 @@ public class User {
 		return value == null ? null : value.trim().toLowerCase(Locale.ROOT);
 	}
 
+	public void updateProfile(String email, String firstName, String lastName) {
+		this.email = normalizeEmail(email);
+		this.firstName = firstName;
+		this.lastName = lastName;
+	}
+
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
+	}
+
+	public void changeRole(Role role) {
+		this.role = role;
+	}
+
 	public Long getId() {
 		return id;
 	}
