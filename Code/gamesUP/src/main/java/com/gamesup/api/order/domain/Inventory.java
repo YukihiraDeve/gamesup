@@ -51,6 +51,13 @@ public class Inventory {
 		this.quantity = quantity;
 	}
 
+	public void decreaseBy(int orderedQuantity) {
+		if (orderedQuantity < 1 || orderedQuantity > quantity) {
+			throw new IllegalArgumentException("Ordered quantity must be available and positive.");
+		}
+		quantity -= orderedQuantity;
+	}
+
 	public Long getId() {
 		return id;
 	}

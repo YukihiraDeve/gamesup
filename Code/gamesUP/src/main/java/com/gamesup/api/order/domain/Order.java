@@ -51,6 +51,10 @@ public class Order {
 		this.status = status;
 	}
 
+	public void changeStatus(OrderStatus status) {
+		this.status = status;
+	}
+
 	@PrePersist
 	void onCreate() {
 		Instant now = Instant.now();
