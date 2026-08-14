@@ -75,10 +75,13 @@ class WishlistServiceTest {
 	void refusesInactiveAndMissingGamesWithoutCreatingAWishlist() {
 		User owner = saveUser("wishlist-invalid-game@example.com");
 		Game inactiveGame = saveGame("Inactive game", false);
+		Game activeGame = saveGame("Active game without user", true);
 
 		assertThatThrownBy(() -> wishlistService.addGame(owner.getId(), inactiveGame.getId()))
 				.isInstanceOf(ResourceNotFoundException.class);
 		assertThatThrownBy(() -> wishlistService.addGame(owner.getId(), Long.MAX_VALUE))
+				.isInstanceOf(ResourceNotFoundException.class);
+		assertThatThrownBy(() -> wishlistService.addGame(Long.MAX_VALUE, activeGame.getId()))
 				.isInstanceOf(ResourceNotFoundException.class);
 		assertThat(wishlistRepository.count()).isZero();
 	}

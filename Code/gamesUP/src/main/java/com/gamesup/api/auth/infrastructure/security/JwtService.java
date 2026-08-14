@@ -1,11 +1,13 @@
 package com.gamesup.api.auth.infrastructure.security;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
 import java.time.Instant;
 import java.util.Date;
 
 import javax.crypto.SecretKey;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -20,14 +22,21 @@ public class JwtService {
 
 	private final JwtProperties properties;
 	private final SecretKey signingKey;
+	private final Clock clock;
 
+	@Autowired
 	public JwtService(JwtProperties properties) {
+		this(properties, Clock.systemUTC());
+	}
+
+	JwtService(JwtProperties properties, Clock clock) {
 		this.properties = properties;
 		this.signingKey = Keys.hmacShaKeyFor(properties.secret().getBytes(StandardCharsets.UTF_8));
+		this.clock = clock;
 	}
 
 	public String generateToken(UserDetails userDetails) {
-		Instant issuedAt = Instant.now();
+		Instant issuedAt = Instant.now(clock);
 		Instant expiresAt = issuedAt.plus(properties.accessTokenTtl());
 		String role = userDetails.getAuthorities().stream()
 				.findFirst()

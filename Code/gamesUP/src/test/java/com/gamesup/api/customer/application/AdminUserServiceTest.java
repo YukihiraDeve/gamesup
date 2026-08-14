@@ -13,6 +13,8 @@ import com.gamesup.api.auth.domain.Role;
 import com.gamesup.api.auth.domain.User;
 import com.gamesup.api.auth.infrastructure.persistence.UserRepository;
 import com.gamesup.api.common.application.exception.ForbiddenOperationException;
+import com.gamesup.api.common.application.exception.InvalidRequestException;
+import com.gamesup.api.common.application.exception.ResourceNotFoundException;
 
 @DataJpaTest(properties = {
 		"spring.flyway.enabled=false",
@@ -55,6 +57,16 @@ class AdminUserServiceTest {
 		assertThatThrownBy(() -> adminUserService.changeRole(
 				administrator.getId(), administrator.getId(), Role.CLIENT))
 				.isInstanceOf(ForbiddenOperationException.class);
+	}
+
+	@Test
+	void rejectsInvalidPaginationAndUnknownAccounts() {
+		assertThatThrownBy(() -> adminUserService.findAll(-1, 20))
+				.isInstanceOf(InvalidRequestException.class);
+		assertThatThrownBy(() -> adminUserService.findAll(0, 101))
+				.isInstanceOf(InvalidRequestException.class);
+		assertThatThrownBy(() -> adminUserService.findById(Long.MAX_VALUE))
+				.isInstanceOf(ResourceNotFoundException.class);
 	}
 
 	private User saveUser(String email, Role role) {

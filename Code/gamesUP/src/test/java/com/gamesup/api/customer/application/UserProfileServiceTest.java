@@ -13,6 +13,7 @@ import com.gamesup.api.auth.domain.Role;
 import com.gamesup.api.auth.domain.User;
 import com.gamesup.api.auth.infrastructure.persistence.UserRepository;
 import com.gamesup.api.common.application.exception.ConflictException;
+import com.gamesup.api.common.application.exception.ResourceNotFoundException;
 import com.gamesup.api.customer.web.dto.UserProfileUpdateRequest;
 
 @DataJpaTest(properties = {
@@ -60,6 +61,12 @@ class UserProfileServiceTest {
 				owner.getId(),
 				new UserProfileUpdateRequest("USED@example.com", null, null)))
 				.isInstanceOf(ConflictException.class);
+	}
+
+	@Test
+	void rejectsAnUnknownCurrentUser() {
+		assertThatThrownBy(() -> userProfileService.findCurrentUser(Long.MAX_VALUE))
+				.isInstanceOf(ResourceNotFoundException.class);
 	}
 
 	private User saveUser(String email, String firstName, String lastName, Role role) {

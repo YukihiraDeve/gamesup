@@ -99,6 +99,17 @@ class ReviewServiceTest {
 				.isInstanceOf(InvalidRequestException.class);
 		assertThatThrownBy(() -> reviewService.create(owner.getId(), Long.MAX_VALUE, 3, null))
 				.isInstanceOf(ResourceNotFoundException.class);
+		assertThatThrownBy(() -> reviewService.findPublishedByGame(game.getId(), -1, 20))
+				.isInstanceOf(InvalidRequestException.class);
+		assertThatThrownBy(() -> reviewService.findPublishedByGame(game.getId(), 0, 101))
+				.isInstanceOf(InvalidRequestException.class);
+		assertThatThrownBy(() -> reviewService.update(owner.getId(), Long.MAX_VALUE, 3, null))
+				.isInstanceOf(ResourceNotFoundException.class);
+		assertThatThrownBy(() -> reviewService.changeVisibility(Long.MAX_VALUE, true))
+				.isInstanceOf(ResourceNotFoundException.class);
+
+		var blankComment = reviewService.create(owner.getId(), game.getId(), 3, "   ");
+		assertThat(blankComment.comment()).isNull();
 	}
 
 	private User saveUser(String email, String firstName) {

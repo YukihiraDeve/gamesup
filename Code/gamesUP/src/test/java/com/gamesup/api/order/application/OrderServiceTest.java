@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -22,6 +23,8 @@ import com.gamesup.api.catalog.infrastructure.persistence.GameRepository;
 import com.gamesup.api.catalog.infrastructure.persistence.PublisherRepository;
 import com.gamesup.api.common.application.exception.BusinessRuleViolationException;
 import com.gamesup.api.common.application.exception.ForbiddenOperationException;
+import com.gamesup.api.common.application.exception.InvalidRequestException;
+import com.gamesup.api.common.application.exception.ResourceNotFoundException;
 import com.gamesup.api.order.domain.Inventory;
 import com.gamesup.api.order.domain.OrderStatus;
 import com.gamesup.api.order.infrastructure.persistence.InventoryRepository;
@@ -94,6 +97,40 @@ class OrderServiceTest {
 				.isEqualTo(OrderStatus.ARCHIVED);
 		assertThatThrownBy(() -> adminOrderService.transition(created.id(), OrderStatus.PAID))
 				.isInstanceOf(BusinessRuleViolationException.class);
+	}
+
+	@Test
+	void rejectsInvalidLinesMissingGamesAndUnavailableStock() {
+		User owner = saveUser("order-errors@example.com");
+		Game game = saveGame("Order validation game", "10.00", 1);
+
+		assertThatThrownBy(() -> orderService.create(owner.getId(), null))
+				.isInstanceOf(InvalidRequestException.class);
+		assertThatThrownBy(() -> orderService.create(owner.getId(), List.of()))
+				.isInstanceOf(InvalidRequestException.class);
+		assertThatThrownBy(() -> orderService.create(
+				owner.getId(), Collections.singletonList(null)))
+				.isInstanceOf(InvalidRequestException.class);
+		assertThatThrownBy(() -> orderService.create(
+				owner.getId(), List.of(new OrderLineRequest(null, 1))))
+				.isInstanceOf(InvalidRequestException.class);
+		assertThatThrownBy(() -> orderService.create(
+				owner.getId(), List.of(new OrderLineRequest(game.getId(), 0))))
+				.isInstanceOf(InvalidRequestException.class);
+		assertThatThrownBy(() -> orderService.create(owner.getId(), List.of(
+				new OrderLineRequest(game.getId(), 1),
+				new OrderLineRequest(game.getId(), 1))))
+				.isInstanceOf(InvalidRequestException.class);
+		assertThatThrownBy(() -> orderService.create(
+				owner.getId(), List.of(new OrderLineRequest(Long.MAX_VALUE, 1))))
+				.isInstanceOf(ResourceNotFoundException.class);
+		assertThatThrownBy(() -> orderService.create(
+				owner.getId(), List.of(new OrderLineRequest(game.getId(), 2))))
+				.isInstanceOf(BusinessRuleViolationException.class);
+		assertThatThrownBy(() -> orderService.findCurrentUserOrders(owner.getId(), -1, 20))
+				.isInstanceOf(InvalidRequestException.class);
+		assertThatThrownBy(() -> adminOrderService.findAll(0, 101))
+				.isInstanceOf(InvalidRequestException.class);
 	}
 
 	private User saveUser(String email) {
