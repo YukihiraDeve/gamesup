@@ -53,6 +53,9 @@ public class Review {
 	@Column(length = 2000)
 	private String comment;
 
+	@Column(nullable = false)
+	private boolean hidden;
+
 	@Column(name = "created_at", nullable = false, updatable = false)
 	private Instant createdAt;
 
@@ -67,6 +70,15 @@ public class Review {
 		this.game = game;
 		this.rating = rating;
 		this.comment = comment;
+	}
+
+	public void update(int rating, String comment) {
+		this.rating = rating;
+		this.comment = comment;
+	}
+
+	public void setHidden(boolean hidden) {
+		this.hidden = hidden;
 	}
 
 	@PrePersist
@@ -99,6 +111,10 @@ public class Review {
 
 	public String getComment() {
 		return comment;
+	}
+
+	public boolean isHidden() {
+		return hidden;
 	}
 
 	public Instant getCreatedAt() {
