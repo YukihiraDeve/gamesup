@@ -9,6 +9,10 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -24,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.gamesup.api.auth.application.GamesUpUserPrincipal;
 import com.gamesup.api.common.web.dto.PageResponse;
+import com.gamesup.api.config.web.OpenApiConfiguration;
 import com.gamesup.api.order.application.OrderService;
 import com.gamesup.api.order.web.dto.OrderCreateRequest;
 import com.gamesup.api.order.web.dto.OrderResponse;
@@ -32,6 +37,10 @@ import com.gamesup.api.order.web.dto.OrderResponse;
 @RestController
 @PreAuthorize("hasRole('CLIENT')")
 @RequestMapping("/api/v1/orders")
+@Tag(
+		name = "Orders",
+		description = "Commandes du CLIENT connecté ; prix recalculés côté serveur et stock verrouillé.")
+@SecurityRequirement(name = OpenApiConfiguration.BEARER_AUTH)
 public class OrderController {
 
 	private final OrderService orderService;
@@ -42,6 +51,9 @@ public class OrderController {
 
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
+	@Operation(
+			summary = "Créer une commande",
+			description = "Le corps accepte uniquement les identifiants de jeux et quantités ; tout prix reçu est ignoré.")
 	public OrderResponse create(
 			@AuthenticationPrincipal GamesUpUserPrincipal principal,
 			@Valid @RequestBody OrderCreateRequest request) {
@@ -49,6 +61,7 @@ public class OrderController {
 	}
 
 	@GetMapping
+	@Operation(summary = "Lister ses commandes")
 	public PageResponse<OrderResponse> findCurrentUserOrders(
 			@AuthenticationPrincipal GamesUpUserPrincipal principal,
 			@RequestParam(defaultValue = "0") @Min(PAGE_MIN) int page,
@@ -57,6 +70,7 @@ public class OrderController {
 	}
 
 	@GetMapping("/{orderId}")
+	@Operation(summary = "Consulter une de ses commandes")
 	public OrderResponse findCurrentUserOrder(
 			@AuthenticationPrincipal GamesUpUserPrincipal principal,
 			@PathVariable @Positive Long orderId) {

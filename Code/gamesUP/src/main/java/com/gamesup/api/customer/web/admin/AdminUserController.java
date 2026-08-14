@@ -9,6 +9,10 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
@@ -22,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.gamesup.api.auth.application.GamesUpUserPrincipal;
 import com.gamesup.api.common.web.dto.PageResponse;
+import com.gamesup.api.config.web.OpenApiConfiguration;
 import com.gamesup.api.customer.application.AdminUserService;
 import com.gamesup.api.customer.web.admin.dto.AdminUserEnabledRequest;
 import com.gamesup.api.customer.web.admin.dto.AdminUserRoleRequest;
@@ -31,6 +36,8 @@ import com.gamesup.api.customer.web.dto.UserResponse;
 @RestController
 @PreAuthorize("hasRole('ADMIN')")
 @RequestMapping("/api/v1/admin/users")
+@Tag(name = "User administration", description = "Consultation, activation et rôles réservés aux ADMIN.")
+@SecurityRequirement(name = OpenApiConfiguration.BEARER_AUTH)
 public class AdminUserController {
 
 	private final AdminUserService adminUserService;
@@ -40,6 +47,7 @@ public class AdminUserController {
 	}
 
 	@GetMapping
+	@Operation(summary = "Lister les utilisateurs")
 	public PageResponse<UserResponse> findAll(
 			@RequestParam(defaultValue = "0") @Min(PAGE_MIN) int page,
 			@RequestParam(defaultValue = "20") @Min(PAGE_SIZE_MIN) @Max(PAGE_SIZE_MAX) int size) {
@@ -47,11 +55,15 @@ public class AdminUserController {
 	}
 
 	@GetMapping("/{userId}")
+	@Operation(summary = "Consulter un utilisateur")
 	public UserResponse findById(@PathVariable @Positive Long userId) {
 		return adminUserService.findById(userId);
 	}
 
 	@PatchMapping("/{userId}/enabled")
+	@Operation(
+			summary = "Activer ou désactiver un compte",
+			description = "Un administrateur ne peut pas désactiver son propre compte.")
 	public UserResponse changeEnabled(
 			@AuthenticationPrincipal GamesUpUserPrincipal principal,
 			@PathVariable @Positive Long userId,
@@ -60,6 +72,9 @@ public class AdminUserController {
 	}
 
 	@PatchMapping("/{userId}/role")
+	@Operation(
+			summary = "Modifier un rôle",
+			description = "Un administrateur ne peut pas retirer son propre rôle ADMIN.")
 	public UserResponse changeRole(
 			@AuthenticationPrincipal GamesUpUserPrincipal principal,
 			@PathVariable @Positive Long userId,

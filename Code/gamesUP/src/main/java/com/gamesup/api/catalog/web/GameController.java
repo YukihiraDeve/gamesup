@@ -14,6 +14,9 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,6 +33,7 @@ import com.gamesup.api.common.web.dto.PageResponse;
 @Validated
 @RestController
 @RequestMapping("/api/v1/games")
+@Tag(name = "Games", description = "Consultation publique du catalogue actif.")
 public class GameController {
 
 	private final GameQueryService gameQueryService;
@@ -39,6 +43,12 @@ public class GameController {
 	}
 
 	@GetMapping
+	@Operation(
+			summary = "Rechercher les jeux",
+			description = """
+					Retourne une page stable de jeux actifs. Les tris autorisés sont :
+					id, name, price, minAge, durationMinutes et editionNumber.
+					""")
 	public PageResponse<GameSummaryResponse> search(
 			@RequestParam(name = "q", required = false) @Size(max = RESOURCE_NAME_MAX_LENGTH) String query,
 			@RequestParam(required = false) @Size(max = CATALOG_NAME_MAX_LENGTH) String category,
@@ -58,6 +68,7 @@ public class GameController {
 	}
 
 	@GetMapping("/{id}")
+	@Operation(summary = "Consulter un jeu actif")
 	public GameDetailResponse findById(@PathVariable @Positive Long id) {
 		return gameQueryService.findActiveById(id);
 	}

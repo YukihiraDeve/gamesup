@@ -9,6 +9,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.Date;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -51,6 +52,7 @@ class JwtServiceTest {
 		var claims = Jwts.parser()
 				.verifyWith(Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8)))
 				.requireIssuer("gamesup-test")
+				.clock(() -> Date.from(FIXED_TIME))
 				.build()
 				.parseSignedClaims(token)
 				.getPayload();

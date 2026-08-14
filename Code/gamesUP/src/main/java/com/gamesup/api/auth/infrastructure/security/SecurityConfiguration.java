@@ -58,6 +58,11 @@ public class SecurityConfiguration {
 				.authorizeHttpRequests(authorize -> authorize
 						.requestMatchers(HttpMethod.POST, "/api/v1/auth/register", "/api/v1/auth/login").permitAll()
 						.requestMatchers(HttpMethod.GET, "/api/v1/games", "/api/v1/games/**").permitAll()
+						.requestMatchers(
+								"/v3/api-docs.yaml",
+								"/v3/api-docs/**",
+								"/swagger-ui.html",
+								"/swagger-ui/**").permitAll()
 						.requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
 						.anyRequest().authenticated())
 				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

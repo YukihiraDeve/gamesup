@@ -1,0 +1,2793 @@
+openapi: 3.0.1
+info:
+  title: GamesUP API
+  description: |
+    API REST du catalogue et des parcours clients GamesUP.
+    Les ressources personnelles sont toujours déterminées par le jeton JWT :
+    aucune route ne permet de sélectionner un autre utilisateur.
+  contact:
+    name: GamesUP
+  license:
+    name: Projet pédagogique
+  version: 1.0.0
+servers:
+- url: /
+  description: Serveur courant
+tags:
+- name: Current user
+  description: Profil déterminé uniquement par le JWT ; aucun identifiant utilisateur
+    n'est accepté.
+- name: Review administration
+  description: "Modération sans suppression physique, réservée aux ADMIN."
+- name: Order administration
+  description: Consultation et machine d'état réservées aux ADMIN.
+- name: Catalog administration
+  description: "CRUD des jeux, auteurs, éditeurs et catégories réservé aux ADMIN."
+- name: Inventory administration
+  description: "Stock absolu d'un jeu, réservé aux ADMIN."
+- name: Wishlist
+  description: Liste de souhaits privée du CLIENT identifié par le JWT.
+- name: User administration
+  description: "Consultation, activation et rôles réservés aux ADMIN."
+- name: Orders
+  description: Commandes du CLIENT connecté ; prix recalculés côté serveur et stock
+    verrouillé.
+- name: Authentication
+  description: Inscription CLIENT et obtention d'un jeton JWT.
+- name: Owned reviews
+  description: Modification et suppression réservées au propriétaire.
+- name: Game reviews
+  description: Avis publics d'un jeu et création par un CLIENT.
+- name: Games
+  description: Consultation publique du catalogue actif.
+paths:
+  /api/v1/users/me/wishlist/{gameId}:
+    put:
+      tags:
+      - Wishlist
+      summary: Ajouter un jeu
+      description: "Opération idempotente : un ajout répété ne crée pas de doublon."
+      operationId: addGame
+      parameters:
+      - name: gameId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/WishlistResponse"
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: "JWT absent, invalide ou expiré."
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: Rôle ou propriété de la ressource insuffisant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerAuth: []
+    delete:
+      tags:
+      - Wishlist
+      summary: Retirer un jeu
+      description: La suppression d'un jeu absent reste idempotente.
+      operationId: removeGame
+      parameters:
+      - name: gameId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: "JWT absent, invalide ou expiré."
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: Rôle ou propriété de la ressource insuffisant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerAuth: []
+  /api/v1/reviews/{reviewId}:
+    put:
+      tags:
+      - Owned reviews
+      summary: Modifier son avis
+      operationId: update
+      parameters:
+      - name: reviewId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ReviewResponse"
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: "JWT absent, invalide ou expiré."
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: Rôle ou propriété de la ressource insuffisant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerAuth: []
+    delete:
+      tags:
+      - Owned reviews
+      summary: Supprimer son avis
+      operationId: delete
+      parameters:
+      - name: reviewId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: "JWT absent, invalide ou expiré."
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: Rôle ou propriété de la ressource insuffisant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerAuth: []
+  /api/v1/admin/inventory/{gameId}:
+    get:
+      tags:
+      - Inventory administration
+      summary: Consulter le stock d'un jeu
+      operationId: find
+      parameters:
+      - name: gameId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/InventoryResponse"
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: "JWT absent, invalide ou expiré."
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: Rôle ou propriété de la ressource insuffisant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerAuth: []
+    put:
+      tags:
+      - Inventory administration
+      summary: Définir le stock absolu
+      operationId: setAbsoluteQuantity
+      parameters:
+      - name: gameId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InventoryUpdateRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/InventoryResponse"
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: "JWT absent, invalide ou expiré."
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: Rôle ou propriété de la ressource insuffisant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerAuth: []
+  /api/v1/admin/catalog/publishers/{id}:
+    put:
+      tags:
+      - Catalog administration
+      summary: Renommer un éditeur
+      operationId: updatePublisher
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CatalogReferenceUpdateRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CatalogReferenceResponse"
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: "JWT absent, invalide ou expiré."
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: Rôle ou propriété de la ressource insuffisant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "409":
+          description: Conflit avec l'état courant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerAuth: []
+    delete:
+      tags:
+      - Catalog administration
+      summary: Supprimer un éditeur inutilisé
+      operationId: deletePublisher
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: "JWT absent, invalide ou expiré."
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: Rôle ou propriété de la ressource insuffisant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "409":
+          description: Conflit avec l'état courant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerAuth: []
+  /api/v1/admin/catalog/games/{id}:
+    get:
+      tags:
+      - Catalog administration
+      summary: "Consulter un jeu, actif ou archivé"
+      operationId: findGame
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AdminGameResponse"
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: "JWT absent, invalide ou expiré."
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: Rôle ou propriété de la ressource insuffisant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "409":
+          description: Conflit avec l'état courant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerAuth: []
+    put:
+      tags:
+      - Catalog administration
+      summary: Remplacer les données éditables d'un jeu
+      operationId: updateGame
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminGameUpdateRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AdminGameResponse"
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: "JWT absent, invalide ou expiré."
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: Rôle ou propriété de la ressource insuffisant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "409":
+          description: Conflit avec l'état courant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerAuth: []
+    delete:
+      tags:
+      - Catalog administration
+      summary: Archiver un jeu
+      description: L'archivage est logique et préserve l'historique.
+      operationId: archiveGame
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: "JWT absent, invalide ou expiré."
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: Rôle ou propriété de la ressource insuffisant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "409":
+          description: Conflit avec l'état courant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerAuth: []
+  /api/v1/admin/catalog/categories/{id}:
+    put:
+      tags:
+      - Catalog administration
+      summary: Renommer une catégorie
+      operationId: updateCategory
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CatalogReferenceUpdateRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CatalogReferenceResponse"
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: "JWT absent, invalide ou expiré."
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: Rôle ou propriété de la ressource insuffisant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "409":
+          description: Conflit avec l'état courant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerAuth: []
+    delete:
+      tags:
+      - Catalog administration
+      summary: Supprimer une catégorie inutilisée
+      operationId: deleteCategory
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: "JWT absent, invalide ou expiré."
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: Rôle ou propriété de la ressource insuffisant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "409":
+          description: Conflit avec l'état courant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerAuth: []
+  /api/v1/admin/catalog/authors/{id}:
+    put:
+      tags:
+      - Catalog administration
+      summary: Renommer un auteur
+      operationId: updateAuthor
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CatalogReferenceUpdateRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CatalogReferenceResponse"
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: "JWT absent, invalide ou expiré."
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: Rôle ou propriété de la ressource insuffisant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "409":
+          description: Conflit avec l'état courant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerAuth: []
+    delete:
+      tags:
+      - Catalog administration
+      summary: Supprimer un auteur inutilisé
+      operationId: deleteAuthor
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: "JWT absent, invalide ou expiré."
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: Rôle ou propriété de la ressource insuffisant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "409":
+          description: Conflit avec l'état courant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerAuth: []
+  /api/v1/orders:
+    get:
+      tags:
+      - Orders
+      summary: Lister ses commandes
+      operationId: findCurrentUserOrders
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          minimum: 0
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          maximum: 100
+          minimum: 1
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseOrderResponse"
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: "JWT absent, invalide ou expiré."
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: Rôle ou propriété de la ressource insuffisant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "422":
+          description: Règle métier empêchant l'opération.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Orders
+      summary: Créer une commande
+      description: Le corps accepte uniquement les identifiants de jeux et quantités
+        ; tout prix reçu est ignoré.
+      operationId: create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderCreateRequest"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/OrderResponse"
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: "JWT absent, invalide ou expiré."
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: Rôle ou propriété de la ressource insuffisant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "422":
+          description: Règle métier empêchant l'opération.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerAuth: []
+  /api/v1/games/{gameId}/reviews:
+    get:
+      tags:
+      - Game reviews
+      summary: Lister les avis publiés
+      description: Les avis masqués sont exclus et seul le prénom public du client
+        est exposé.
+      operationId: findPublishedByGame
+      parameters:
+      - name: gameId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: page
+        in: query
+        required: false
+        schema:
+          minimum: 0
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          maximum: 100
+          minimum: 1
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseReviewResponse"
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "409":
+          description: Conflit avec l'état courant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+    post:
+      tags:
+      - Game reviews
+      summary: Créer son avis
+      description: Un seul avis est autorisé par couple client/jeu.
+      operationId: create_1
+      parameters:
+      - name: gameId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewRequest"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/ReviewResponse"
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: "JWT absent, invalide ou expiré."
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: Rôle ou propriété de la ressource insuffisant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "409":
+          description: Conflit avec l'état courant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerAuth: []
+  /api/v1/auth/register:
+    post:
+      tags:
+      - Authentication
+      summary: Créer un compte client
+      description: Crée exclusivement un compte CLIENT et retourne immédiatement un
+        JWT.
+      operationId: register
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+        required: true
+      responses:
+        "201":
+          description: Compte créé.
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AuthenticationResponse"
+              example:
+                accessToken: eyJ...
+                tokenType: Bearer
+                expiresInSeconds: 3600
+                userId: 42
+                email: alice@example.com
+                role: CLIENT
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "409":
+          description: Conflit avec l'état courant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+  /api/v1/auth/login:
+    post:
+      tags:
+      - Authentication
+      summary: Se connecter
+      description: Authentifie un compte actif sans révéler si l'email ou le mot de
+        passe est incorrect.
+      operationId: login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AuthenticationResponse"
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "409":
+          description: Conflit avec l'état courant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+  /api/v1/admin/catalog/publishers:
+    get:
+      tags:
+      - Catalog administration
+      summary: Lister les éditeurs
+      operationId: findPublishers
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CatalogReferenceResponse"
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: "JWT absent, invalide ou expiré."
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: Rôle ou propriété de la ressource insuffisant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "409":
+          description: Conflit avec l'état courant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Catalog administration
+      summary: Créer un éditeur
+      operationId: createPublisher
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CatalogReferenceCreateRequest"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CatalogReferenceResponse"
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: "JWT absent, invalide ou expiré."
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: Rôle ou propriété de la ressource insuffisant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "409":
+          description: Conflit avec l'état courant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerAuth: []
+  /api/v1/admin/catalog/games:
+    post:
+      tags:
+      - Catalog administration
+      summary: Créer un jeu
+      operationId: createGame
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminGameCreateRequest"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/AdminGameResponse"
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: "JWT absent, invalide ou expiré."
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: Rôle ou propriété de la ressource insuffisant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "409":
+          description: Conflit avec l'état courant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerAuth: []
+  /api/v1/admin/catalog/categories:
+    get:
+      tags:
+      - Catalog administration
+      summary: Lister les catégories
+      operationId: findCategories
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CatalogReferenceResponse"
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: "JWT absent, invalide ou expiré."
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: Rôle ou propriété de la ressource insuffisant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "409":
+          description: Conflit avec l'état courant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Catalog administration
+      summary: Créer une catégorie
+      operationId: createCategory
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CatalogReferenceCreateRequest"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CatalogReferenceResponse"
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: "JWT absent, invalide ou expiré."
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: Rôle ou propriété de la ressource insuffisant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "409":
+          description: Conflit avec l'état courant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerAuth: []
+  /api/v1/admin/catalog/authors:
+    get:
+      tags:
+      - Catalog administration
+      summary: Lister les auteurs
+      operationId: findAuthors
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CatalogReferenceResponse"
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: "JWT absent, invalide ou expiré."
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: Rôle ou propriété de la ressource insuffisant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "409":
+          description: Conflit avec l'état courant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Catalog administration
+      summary: Créer un auteur
+      operationId: createAuthor
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CatalogReferenceCreateRequest"
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/CatalogReferenceResponse"
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: "JWT absent, invalide ou expiré."
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: Rôle ou propriété de la ressource insuffisant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "409":
+          description: Conflit avec l'état courant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerAuth: []
+  /api/v1/users/me:
+    get:
+      tags:
+      - Current user
+      summary: Consulter son profil
+      operationId: findCurrentUser
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: "JWT absent, invalide ou expiré."
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: Rôle ou propriété de la ressource insuffisant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "409":
+          description: Conflit avec l'état courant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerAuth: []
+    patch:
+      tags:
+      - Current user
+      summary: Modifier partiellement son profil
+      operationId: updateCurrentUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserProfileUpdateRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: "JWT absent, invalide ou expiré."
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: Rôle ou propriété de la ressource insuffisant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "409":
+          description: Conflit avec l'état courant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerAuth: []
+  /api/v1/admin/users/{userId}/role:
+    patch:
+      tags:
+      - User administration
+      summary: Modifier un rôle
+      description: Un administrateur ne peut pas retirer son propre rôle ADMIN.
+      operationId: changeRole
+      parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminUserRoleRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: "JWT absent, invalide ou expiré."
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: Rôle ou propriété de la ressource insuffisant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerAuth: []
+  /api/v1/admin/users/{userId}/enabled:
+    patch:
+      tags:
+      - User administration
+      summary: Activer ou désactiver un compte
+      description: Un administrateur ne peut pas désactiver son propre compte.
+      operationId: changeEnabled
+      parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminUserEnabledRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: "JWT absent, invalide ou expiré."
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: Rôle ou propriété de la ressource insuffisant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerAuth: []
+  /api/v1/admin/reviews/{reviewId}/visibility:
+    patch:
+      tags:
+      - Review administration
+      summary: Masquer ou republier un avis
+      operationId: changeVisibility
+      parameters:
+      - name: reviewId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminReviewVisibilityRequest"
+        required: true
+      responses:
+        "204":
+          description: Visibilité modifiée.
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: "JWT absent, invalide ou expiré."
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: Rôle ou propriété de la ressource insuffisant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerAuth: []
+  /api/v1/admin/orders/{orderId}/status:
+    patch:
+      tags:
+      - Order administration
+      summary: Faire évoluer le statut
+      description: Seules les transitions définies par la machine d'état sont acceptées.
+      operationId: transition
+      parameters:
+      - name: orderId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminOrderStatusRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/OrderResponse"
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: "JWT absent, invalide ou expiré."
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: Rôle ou propriété de la ressource insuffisant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "422":
+          description: Règle métier empêchant l'opération.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerAuth: []
+  /api/v1/users/me/wishlist:
+    get:
+      tags:
+      - Wishlist
+      summary: Consulter sa wishlist
+      operationId: findCurrentWishlist
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/WishlistResponse"
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: "JWT absent, invalide ou expiré."
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: Rôle ou propriété de la ressource insuffisant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerAuth: []
+  /api/v1/orders/{orderId}:
+    get:
+      tags:
+      - Orders
+      summary: Consulter une de ses commandes
+      operationId: findCurrentUserOrder
+      parameters:
+      - name: orderId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/OrderResponse"
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: "JWT absent, invalide ou expiré."
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: Rôle ou propriété de la ressource insuffisant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "422":
+          description: Règle métier empêchant l'opération.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerAuth: []
+  /api/v1/games:
+    get:
+      tags:
+      - Games
+      summary: Rechercher les jeux
+      description: |
+        Retourne une page stable de jeux actifs. Les tris autorisés sont :
+        id, name, price, minAge, durationMinutes et editionNumber.
+      operationId: search
+      parameters:
+      - name: q
+        in: query
+        required: false
+        schema:
+          maxLength: 200
+          minLength: 0
+          type: string
+      - name: category
+        in: query
+        required: false
+        schema:
+          maxLength: 150
+          minLength: 0
+          type: string
+      - name: minPrice
+        in: query
+        required: false
+        schema:
+          minimum: 0.0
+          exclusiveMinimum: false
+          type: number
+      - name: maxPrice
+        in: query
+        required: false
+        schema:
+          minimum: 0.0
+          exclusiveMinimum: false
+          type: number
+      - name: page
+        in: query
+        required: false
+        schema:
+          minimum: 0
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          maximum: 100
+          minimum: 1
+          type: integer
+          format: int32
+          default: 20
+      - name: sort
+        in: query
+        required: false
+        schema:
+          maxLength: 50
+          minLength: 0
+          type: string
+          default: "name,asc"
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseGameSummaryResponse"
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+  /api/v1/games/{id}:
+    get:
+      tags:
+      - Games
+      summary: Consulter un jeu actif
+      operationId: findById
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/GameDetailResponse"
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+  /api/v1/admin/users:
+    get:
+      tags:
+      - User administration
+      summary: Lister les utilisateurs
+      operationId: findAll
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          minimum: 0
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          maximum: 100
+          minimum: 1
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseUserResponse"
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: "JWT absent, invalide ou expiré."
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: Rôle ou propriété de la ressource insuffisant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerAuth: []
+  /api/v1/admin/users/{userId}:
+    get:
+      tags:
+      - User administration
+      summary: Consulter un utilisateur
+      operationId: findById_1
+      parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: "JWT absent, invalide ou expiré."
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: Rôle ou propriété de la ressource insuffisant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerAuth: []
+  /api/v1/admin/orders:
+    get:
+      tags:
+      - Order administration
+      summary: Lister toutes les commandes
+      operationId: findAll_1
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          minimum: 0
+          type: integer
+          format: int32
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          maximum: 100
+          minimum: 1
+          type: integer
+          format: int32
+          default: 20
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/PageResponseOrderResponse"
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: "JWT absent, invalide ou expiré."
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: Rôle ou propriété de la ressource insuffisant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "422":
+          description: Règle métier empêchant l'opération.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerAuth: []
+components:
+  schemas:
+    GameSummaryResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        price:
+          type: number
+        minPlayers:
+          type: integer
+          format: int32
+        maxPlayers:
+          type: integer
+          format: int32
+        minAge:
+          type: integer
+          format: int32
+        durationMinutes:
+          type: integer
+          format: int32
+        publisher:
+          type: string
+        authors:
+          type: array
+          items:
+            type: string
+        categories:
+          type: array
+          items:
+            type: string
+    WishlistResponse:
+      type: object
+      properties:
+        games:
+          type: array
+          items:
+            $ref: "#/components/schemas/GameSummaryResponse"
+    ReviewRequest:
+      required:
+      - rating
+      type: object
+      properties:
+        rating:
+          maximum: 5
+          exclusiveMaximum: false
+          minimum: 1
+          exclusiveMinimum: false
+          type: number
+          description: Note entière de 1 à 5.
+          example: 5
+        comment:
+          maxLength: 2000
+          minLength: 0
+          type: string
+          example: "Accessible, rapide et très rejouable."
+    ReviewResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        gameId:
+          type: integer
+          format: int64
+        rating:
+          type: integer
+          format: int32
+        comment:
+          type: string
+        reviewerName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    InventoryUpdateRequest:
+      required:
+      - quantity
+      type: object
+      properties:
+        quantity:
+          minimum: 0
+          type: integer
+          format: int32
+    InventoryResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        gameId:
+          type: integer
+          format: int64
+        quantity:
+          type: integer
+          format: int32
+        version:
+          type: integer
+          format: int64
+    CatalogReferenceUpdateRequest:
+      required:
+      - name
+      type: object
+      properties:
+        name:
+          maxLength: 150
+          minLength: 0
+          type: string
+    CatalogReferenceResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+    AdminGameUpdateRequest:
+      required:
+      - authorIds
+      - categoryIds
+      - description
+      - durationMinutes
+      - editionNumber
+      - maxPlayers
+      - minAge
+      - minPlayers
+      - name
+      - price
+      - publisherId
+      type: object
+      properties:
+        name:
+          maxLength: 200
+          minLength: 0
+          type: string
+        description:
+          maxLength: 4000
+          minLength: 0
+          type: string
+        price:
+          minimum: 0.00
+          exclusiveMinimum: false
+          type: number
+        minPlayers:
+          minimum: 1
+          type: integer
+          format: int32
+        maxPlayers:
+          minimum: 1
+          type: integer
+          format: int32
+        minAge:
+          minimum: 0
+          type: integer
+          format: int32
+        durationMinutes:
+          minimum: 1
+          type: integer
+          format: int32
+        editionNumber:
+          minimum: 1
+          type: integer
+          format: int32
+        publisherId:
+          type: integer
+          format: int64
+        authorIds:
+          uniqueItems: true
+          type: array
+          items:
+            type: integer
+            format: int64
+        categoryIds:
+          uniqueItems: true
+          type: array
+          items:
+            type: integer
+            format: int64
+        playerRangeValid:
+          type: boolean
+    AdminGameResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        minPlayers:
+          type: integer
+          format: int32
+        maxPlayers:
+          type: integer
+          format: int32
+        minAge:
+          type: integer
+          format: int32
+        durationMinutes:
+          type: integer
+          format: int32
+        editionNumber:
+          type: integer
+          format: int32
+        active:
+          type: boolean
+        publisher:
+          $ref: "#/components/schemas/CatalogReferenceResponse"
+        authors:
+          type: array
+          items:
+            $ref: "#/components/schemas/CatalogReferenceResponse"
+        categories:
+          type: array
+          items:
+            $ref: "#/components/schemas/CatalogReferenceResponse"
+    OrderCreateRequest:
+      required:
+      - lines
+      type: object
+      properties:
+        lines:
+          maxItems: 100
+          minItems: 0
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderLineRequest"
+    OrderLineRequest:
+      required:
+      - gameId
+      - quantity
+      type: object
+      properties:
+        gameId:
+          type: integer
+          description: Identifiant d'un jeu actif.
+          format: int64
+          example: 12
+        quantity:
+          minimum: 1
+          type: integer
+          format: int32
+          example: 2
+    OrderLineResponse:
+      type: object
+      properties:
+        gameId:
+          type: integer
+          format: int64
+        gameName:
+          type: string
+        quantity:
+          type: integer
+          format: int32
+        unitPrice:
+          type: number
+        lineTotal:
+          type: number
+    OrderResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        customerId:
+          type: integer
+          format: int64
+        status:
+          type: string
+          enum:
+          - PENDING
+          - PAID
+          - SHIPPED
+          - DELIVERED
+          - CANCELLED
+          - ARCHIVED
+        total:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        lines:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderLineResponse"
+    AuthenticationResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        tokenType:
+          type: string
+        expiresInSeconds:
+          type: integer
+          format: int64
+        userId:
+          type: integer
+          format: int64
+        email:
+          type: string
+        role:
+          type: string
+          enum:
+          - CLIENT
+          - ADMIN
+    RegisterRequest:
+      required:
+      - email
+      - firstName
+      - lastName
+      - password
+      type: object
+      properties:
+        email:
+          maxLength: 320
+          minLength: 0
+          type: string
+          example: alice@example.com
+        password:
+          maxLength: 72
+          minLength: 12
+          type: string
+          format: password
+          writeOnly: true
+          example: A-strong-password-2026
+        firstName:
+          maxLength: 100
+          minLength: 0
+          type: string
+          example: Alice
+        lastName:
+          maxLength: 100
+          minLength: 0
+          type: string
+          example: Martin
+    LoginRequest:
+      required:
+      - email
+      - password
+      type: object
+      properties:
+        email:
+          maxLength: 320
+          minLength: 0
+          type: string
+          example: alice@example.com
+        password:
+          maxLength: 72
+          minLength: 0
+          type: string
+          format: password
+          writeOnly: true
+          example: A-strong-password-2026
+    CatalogReferenceCreateRequest:
+      required:
+      - name
+      type: object
+      properties:
+        name:
+          maxLength: 150
+          minLength: 0
+          type: string
+    AdminGameCreateRequest:
+      required:
+      - authorIds
+      - categoryIds
+      - description
+      - durationMinutes
+      - editionNumber
+      - maxPlayers
+      - minAge
+      - minPlayers
+      - name
+      - price
+      - publisherId
+      type: object
+      properties:
+        name:
+          maxLength: 200
+          minLength: 0
+          type: string
+          example: Explorateurs du Levant
+        description:
+          maxLength: 4000
+          minLength: 0
+          type: string
+          example: Un jeu d'exploration et de stratégie pour toute la famille.
+        price:
+          minimum: 0.00
+          exclusiveMinimum: false
+          type: number
+          example: 39.9
+        minPlayers:
+          minimum: 1
+          type: integer
+          format: int32
+          example: 2
+        maxPlayers:
+          minimum: 1
+          type: integer
+          format: int32
+          example: 5
+        minAge:
+          minimum: 0
+          type: integer
+          format: int32
+          example: 10
+        durationMinutes:
+          minimum: 1
+          type: integer
+          format: int32
+          example: 60
+        editionNumber:
+          minimum: 1
+          type: integer
+          format: int32
+          example: 1
+        publisherId:
+          type: integer
+          format: int64
+          example: 3
+        authorIds:
+          uniqueItems: true
+          type: array
+          example:
+          - 4
+          - 7
+          items:
+            type: integer
+            format: int64
+        categoryIds:
+          uniqueItems: true
+          type: array
+          example:
+          - 2
+          - 6
+          items:
+            type: integer
+            format: int64
+        playerRangeValid:
+          type: boolean
+    UserProfileUpdateRequest:
+      type: object
+      properties:
+        email:
+          maxLength: 320
+          minLength: 0
+          type: string
+          example: alice.martin@example.com
+        firstName:
+          maxLength: 100
+          minLength: 0
+          type: string
+          example: Alice
+        lastName:
+          maxLength: 100
+          minLength: 0
+          type: string
+          example: Martin
+        validPatch:
+          type: boolean
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        role:
+          type: string
+          enum:
+          - CLIENT
+          - ADMIN
+        enabled:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    AdminUserRoleRequest:
+      required:
+      - role
+      type: object
+      properties:
+        role:
+          type: string
+          enum:
+          - CLIENT
+          - ADMIN
+    AdminUserEnabledRequest:
+      required:
+      - enabled
+      type: object
+      properties:
+        enabled:
+          type: boolean
+    ProblemDetail:
+      type: object
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+          format: int32
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri
+        properties:
+          type: object
+          additionalProperties:
+            type: object
+    AdminReviewVisibilityRequest:
+      required:
+      - hidden
+      type: object
+      properties:
+        hidden:
+          type: boolean
+    AdminOrderStatusRequest:
+      required:
+      - status
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+          - PENDING
+          - PAID
+          - SHIPPED
+          - DELIVERED
+          - CANCELLED
+          - ARCHIVED
+    PageResponseOrderResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+    PageResponseGameSummaryResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/GameSummaryResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+    GameDetailResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        minPlayers:
+          type: integer
+          format: int32
+        maxPlayers:
+          type: integer
+          format: int32
+        minAge:
+          type: integer
+          format: int32
+        durationMinutes:
+          type: integer
+          format: int32
+        editionNumber:
+          type: integer
+          format: int32
+        publisher:
+          type: string
+        authors:
+          type: array
+          items:
+            type: string
+        categories:
+          type: array
+          items:
+            type: string
+    PageResponseReviewResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReviewResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+    PageResponseUserResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserResponse"
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+  securitySchemes:
+    bearerAuth:
+      type: http
+      description: Jeton retourné par l'inscription ou la connexion.
+      scheme: bearer
+      bearerFormat: JWT
