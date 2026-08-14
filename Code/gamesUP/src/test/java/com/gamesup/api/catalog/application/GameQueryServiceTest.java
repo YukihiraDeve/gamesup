@@ -10,12 +10,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
-import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import com.gamesup.api.catalog.domain.Author;
 import com.gamesup.api.catalog.domain.Category;
@@ -28,6 +24,7 @@ import com.gamesup.api.catalog.infrastructure.persistence.PublisherRepository;
 import com.gamesup.api.common.application.exception.InvalidRequestException;
 import com.gamesup.api.common.application.exception.ResourceNotFoundException;
 import com.gamesup.api.common.web.dto.PageResponse;
+import com.gamesup.api.testsupport.MySqlIntegrationTest;
 
 @DataJpaTest(properties = {
 		"spring.flyway.enabled=true",
@@ -35,13 +32,8 @@ import com.gamesup.api.common.web.dto.PageResponse;
 })
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ActiveProfiles("test")
-@Testcontainers
 @Import({GameQueryService.class, GameResponseMapper.class})
-class GameQueryServiceTest {
-
-	@Container
-	@ServiceConnection
-	static final MySQLContainer<?> MYSQL = new MySQLContainer<>("mysql:8.4.5");
+class GameQueryServiceTest extends MySqlIntegrationTest {
 
 	@Autowired
 	private GameQueryService gameQueryService;

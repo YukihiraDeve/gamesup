@@ -11,17 +11,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
-import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import com.gamesup.api.catalog.domain.Author;
 import com.gamesup.api.catalog.domain.Category;
 import com.gamesup.api.catalog.domain.Game;
 import com.gamesup.api.catalog.domain.Publisher;
+import com.gamesup.api.testsupport.MySqlIntegrationTest;
 
 import jakarta.validation.ConstraintViolationException;
 
@@ -31,12 +28,7 @@ import jakarta.validation.ConstraintViolationException;
 })
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ActiveProfiles("test")
-@Testcontainers
-class CatalogRepositoryTest {
-
-	@Container
-	@ServiceConnection
-	static final MySQLContainer<?> MYSQL = new MySQLContainer<>("mysql:8.4.5");
+class CatalogRepositoryTest extends MySqlIntegrationTest {
 
 	@Autowired
 	private AuthorRepository authorRepository;

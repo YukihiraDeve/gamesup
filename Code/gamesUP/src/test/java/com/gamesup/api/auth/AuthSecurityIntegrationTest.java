@@ -21,7 +21,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -31,9 +30,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -45,6 +41,7 @@ import com.gamesup.api.GamesUpApplication;
 import com.gamesup.api.auth.domain.Role;
 import com.gamesup.api.auth.domain.User;
 import com.gamesup.api.auth.infrastructure.persistence.UserRepository;
+import com.gamesup.api.testsupport.MySqlIntegrationTest;
 
 @SpringBootTest(properties = {
 		"spring.flyway.enabled=true",
@@ -52,16 +49,11 @@ import com.gamesup.api.auth.infrastructure.persistence.UserRepository;
 })
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Testcontainers
 @ContextConfiguration(classes = { GamesUpApplication.class, AuthSecurityIntegrationTest.TestEndpoints.class })
-class AuthSecurityIntegrationTest {
+class AuthSecurityIntegrationTest extends MySqlIntegrationTest {
 
 	private static final String JWT_SECRET = "test-only-signing-key-with-at-least-32-bytes";
 	private static final String RAW_PASSWORD = "a-secure-password";
-
-	@Container
-	@ServiceConnection
-	static final MySQLContainer<?> MYSQL = new MySQLContainer<>("mysql:8.4.5");
 
 	@Autowired
 	private MockMvc mockMvc;

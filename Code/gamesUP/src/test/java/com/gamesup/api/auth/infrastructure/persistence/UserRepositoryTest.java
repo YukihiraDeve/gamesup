@@ -7,15 +7,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
-import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import com.gamesup.api.auth.domain.Role;
 import com.gamesup.api.auth.domain.User;
+import com.gamesup.api.testsupport.MySqlIntegrationTest;
 
 @DataJpaTest(properties = {
 		"spring.flyway.enabled=true",
@@ -23,15 +20,10 @@ import com.gamesup.api.auth.domain.User;
 })
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ActiveProfiles("test")
-@Testcontainers
-class UserRepositoryTest {
+class UserRepositoryTest extends MySqlIntegrationTest {
 
 	private static final String PASSWORD_HASH =
 			"$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy";
-
-	@Container
-	@ServiceConnection
-	static final MySQLContainer<?> MYSQL = new MySQLContainer<>("mysql:8.4.5");
 
 	@Autowired
 	private UserRepository userRepository;
