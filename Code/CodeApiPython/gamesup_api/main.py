@@ -1,9 +1,11 @@
 """Point d'entrée ASGI du service de recommandation."""
 
+from asyncio import Lock
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from gamesup_api import __version__
@@ -15,7 +17,7 @@ from gamesup_api.model import (
     ModelStatus,
     load_recommender,
 )
-from gamesup_api.routes.health import router as health_router
+from gamesup_api.routes import health_router, recommendations_router
 
 
 @asynccontextmanager
@@ -50,7 +52,26 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.state.settings = application_settings
     application.state.recommender = None
     application.state.model_status = ModelStatus.UNINITIALIZED
+    application.state.training_lock = Lock()
     application.include_router(health_router)
+    application.include_router(recommendations_router)
+
+    @application.exception_handler(RequestValidationError)
+    async def handle_request_validation_error(
+        _request: Request, error: RequestValidationError
+    ) -> JSONResponse:
+        safe_errors = [
+            {
+                key: value
+                for key, value in validation_error.items()
+                if key in {"type", "loc", "msg"}
+            }
+            for validation_error in error.errors()
+        ]
+        return JSONResponse(
+            status_code=422,
+            content={"detail": safe_errors},
+        )
 
     @application.exception_handler(Exception)
     async def handle_unexpected_error(

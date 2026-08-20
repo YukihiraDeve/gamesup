@@ -30,7 +30,15 @@ set +a
 uvicorn gamesup_api.main:app --host "$APP_HOST" --port "$APP_PORT" --reload
 ```
 
-L'état du service est disponible sur `http://127.0.0.1:8000/health`. Cette étape n'expose volontairement aucune route de recommandation.
+`SERVICE_API_KEY` doit contenir une valeur secrète d'au moins 16 caractères et ne doit jamais être commitée. `INTERNAL_API_CIDRS` contient la liste séparée par des virgules des réseaux autorisés à appeler les routes internes. En production, le service refuse de démarrer sans clé explicite.
+
+## Contrat HTTP interne
+
+- `GET /health` reste disponible même si aucun modèle n'est chargé ;
+- `POST /model/train` entraîne et persiste le modèle hors du thread événementiel ;
+- `POST /recommendations` retourne une version de modèle et des items `{game_id, score}`.
+
+Les deux routes `POST` exigent l'en-tête `X-Service-Key` et une adresse cliente appartenant à `INTERNAL_API_CIDRS`. Les corps n'acceptent que des identifiants techniques et des notes, jamais de nom ni d'adresse électronique.
 
 ## Vérification syntaxique
 

@@ -6,10 +6,22 @@ from gamesup_api.schemas.training import (
     TrainingBatch,
     TrainingInteraction,
 )
+from gamesup_api.schemas.recommendations import (
+    RecommendationHistoryItem,
+    RecommendationItem,
+    RecommendationRequest,
+    RecommendationResponse,
+    TrainModelResponse,
+)
 
 __all__ = [
     "PopularityScore",
     "PreparationStatistics",
+    "RecommendationHistoryItem",
+    "RecommendationItem",
+    "RecommendationRequest",
+    "RecommendationResponse",
+    "TrainModelResponse",
     "TrainingBatch",
     "TrainingInteraction",
 ]
