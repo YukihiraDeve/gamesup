@@ -1,0 +1,103 @@
+services:
+  mysql:
+    image: mysql:8.4.5
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-gamesup}
+      MYSQL_USER: ${MYSQL_USER:-gamesup}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD must be set in .env}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD must be set in .env}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - backend
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - mysqladmin ping --host=127.0.0.1 --user=root --password="$${MYSQL_ROOT_PASSWORD}" --silent
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  fastapi:
+    build:
+      context: Code/CodeApiPython
+      dockerfile: Dockerfile
+    environment:
+      APP_ENV: ${APP_ENV:-development}
+      APP_HOST: 0.0.0.0
+      APP_PORT: 8000
+      MODEL_ARTIFACT_PATH: /app/artifacts/recommendation.joblib
+      KNN_NEIGHBORS: ${KNN_NEIGHBORS:-5}
+      INTERNAL_API_CIDRS: ${INTERNAL_API_CIDRS:-172.28.0.0/24}
+      SERVICE_API_KEY: ${FASTAPI_SERVICE_KEY:?FASTAPI_SERVICE_KEY must be set in .env}
+    volumes:
+      - knn_artifacts:/app/artifacts
+    networks:
+      - backend
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          import urllib.request;
+          response = urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2);
+          raise SystemExit(0 if response.status == 200 else 1)
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+
+  spring:
+    build:
+      context: Code/gamesUP
+      dockerfile: Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      SERVER_PORT: 8080
+      DATABASE_URL: "jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-gamesup}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+      DATABASE_USERNAME: ${MYSQL_USER:-gamesup}
+      DATABASE_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD must be set in .env}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:4200}
+      JWT_ISSUER: ${JWT_ISSUER:-gamesup-api}
+      JWT_ACCESS_TOKEN_TTL: ${JWT_ACCESS_TOKEN_TTL:-PT1H}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set in .env}
+      FASTAPI_URL: http://fastapi:8000
+      FASTAPI_SERVICE_KEY: ${FASTAPI_SERVICE_KEY:?FASTAPI_SERVICE_KEY must be set in .env}
+      FASTAPI_CONNECT_TIMEOUT: ${FASTAPI_CONNECT_TIMEOUT:-PT1S}
+      FASTAPI_READ_TIMEOUT: ${FASTAPI_READ_TIMEOUT:-PT3S}
+    ports:
+      - "${SPRING_PORT:-8080}:8080"
+    networks:
+      - backend
+      - edge
+    depends_on:
+      mysql:
+        condition: service_healthy
+      fastapi:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - --fail
+        - --silent
+        - --show-error
+        - http://127.0.0.1:8080/api/v1/games?size=1
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 30s
+
+volumes:
+  mysql_data:
+  knn_artifacts:
+
+networks:
+  backend:
+    internal: true
+    ipam:
+      config:
+        - subnet: 172.28.0.0/24
+  edge:
