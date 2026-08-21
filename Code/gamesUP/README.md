@@ -40,10 +40,14 @@ export DATABASE_PASSWORD="<mot de passe MySQL local>"
 export CORS_ALLOWED_ORIGINS="http://localhost:4200"
 export JWT_SECRET="<secret JWT local>"
 export FASTAPI_URL="http://localhost:8000"
+export FASTAPI_SERVICE_KEY="<clé partagée d'au moins 16 caractères>"
+export FASTAPI_CONNECT_TIMEOUT="PT1S"
+export FASTAPI_READ_TIMEOUT="PT3S"
 ./mvnw spring-boot:run
 ```
 
-Ces valeurs sont uniquement des exemples locaux. Aucun identifiant ni secret réel ne doit être ajouté au dépôt.
+Ces valeurs sont uniquement des exemples locaux. La même clé doit être fournie au service Python via
+`SERVICE_API_KEY`. Aucun identifiant ni secret réel ne doit être ajouté au dépôt.
 
 Le profil `test` utilise une base H2 en mémoire indépendante de MySQL :
 

@@ -14,3 +14,5 @@ spring:
 gamesup:
   jwt:
     secret: test-only-signing-key-with-at-least-32-bytes
+  recommendation:
+    service-key: test-only-fastapi-key

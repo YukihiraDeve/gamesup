@@ -57,7 +57,9 @@ class OpenApiContractTest {
 						"/api/v1/games/{gameId}/reviews:",
 						"/api/v1/reviews/{reviewId}:",
 						"/api/v1/orders:",
+						"/api/v1/recommendations:",
 						"/api/v1/admin/catalog/games:",
+						"/api/v1/admin/recommendations/train:",
 						"/api/v1/admin/users:",
 						"/api/v1/admin/reviews/{reviewId}/visibility:",
 						"/api/v1/admin/orders:",
@@ -75,6 +77,8 @@ class OpenApiContractTest {
 		assertSuccessHasContent(openApi, "/api/v1/games", "get", "200");
 		assertSuccessHasContent(openApi, "/api/v1/users/me/wishlist", "get", "200");
 		assertSuccessHasContent(openApi, "/api/v1/orders", "post", "201");
+		assertSuccessHasContent(openApi, "/api/v1/recommendations", "get", "200");
+		assertSuccessHasContent(openApi, "/api/v1/admin/recommendations/train", "post", "200");
 		assertSuccessHasContent(openApi, "/api/v1/admin/inventory/{gameId}", "get", "200");
 
 		assertThat(VERSIONED_CONTRACT)

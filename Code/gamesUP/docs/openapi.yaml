@@ -17,16 +17,22 @@ tags:
 - name: Current user
   description: Profil déterminé uniquement par le JWT ; aucun identifiant utilisateur
     n'est accepté.
+- name: Recommendation administration
+  description: Entraînement du modèle réservé aux ADMIN.
 - name: Review administration
   description: "Modération sans suppression physique, réservée aux ADMIN."
-- name: Order administration
-  description: Consultation et machine d'état réservées aux ADMIN.
-- name: Catalog administration
-  description: "CRUD des jeux, auteurs, éditeurs et catégories réservé aux ADMIN."
 - name: Inventory administration
   description: "Stock absolu d'un jeu, réservé aux ADMIN."
 - name: Wishlist
   description: Liste de souhaits privée du CLIENT identifié par le JWT.
+- name: Game reviews
+  description: Avis publics d'un jeu et création par un CLIENT.
+- name: Recommendations
+  description: Jeux recommandés au CLIENT connecté.
+- name: Order administration
+  description: Consultation et machine d'état réservées aux ADMIN.
+- name: Catalog administration
+  description: "CRUD des jeux, auteurs, éditeurs et catégories réservé aux ADMIN."
 - name: User administration
   description: "Consultation, activation et rôles réservés aux ADMIN."
 - name: Orders
@@ -36,8 +42,6 @@ tags:
   description: Inscription CLIENT et obtention d'un jeton JWT.
 - name: Owned reviews
   description: Modification et suppression réservées au propriétaire.
-- name: Game reviews
-  description: Avis publics d'un jeu et création par un CLIENT.
 - name: Games
   description: Consultation publique du catalogue actif.
 paths:
@@ -1095,6 +1099,45 @@ paths:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/ProblemDetail"
+  /api/v1/admin/recommendations/train:
+    post:
+      tags:
+      - Recommendation administration
+      summary: Entraîner le modèle de recommandation
+      operationId: train
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/TrainingModelResponse"
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: "JWT absent, invalide ou expiré."
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: Rôle ou propriété de la ressource insuffisant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerAuth: []
   /api/v1/admin/catalog/publishers:
     get:
       tags:
@@ -1758,6 +1801,55 @@ paths:
             '*/*':
               schema:
                 $ref: "#/components/schemas/WishlistResponse"
+        "400":
+          description: Requête ou paramètre invalide.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "401":
+          description: "JWT absent, invalide ou expiré."
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "403":
+          description: Rôle ou propriété de la ressource insuffisant.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+        "404":
+          description: Ressource introuvable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+      security:
+      - bearerAuth: []
+  /api/v1/recommendations:
+    get:
+      tags:
+      - Recommendations
+      summary: Obtenir ses recommandations
+      operationId: recommend
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          maximum: 100
+          minimum: 1
+          type: integer
+          format: int32
+          default: 10
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/RecommendationResponse"
         "400":
           description: Requête ou paramètre invalide.
           content:
@@ -2481,6 +2573,20 @@ components:
           format: password
           writeOnly: true
           example: A-strong-password-2026
+    TrainingModelResponse:
+      type: object
+      properties:
+        version:
+          type: string
+        users:
+          type: integer
+          format: int32
+        games:
+          type: integer
+          format: int32
+        retainedInteractions:
+          type: integer
+          format: int32
     CatalogReferenceCreateRequest:
       required:
       - name
@@ -2672,6 +2778,23 @@ components:
           - DELIVERED
           - CANCELLED
           - ARCHIVED
+    RecommendationResponse:
+      type: object
+      properties:
+        version:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/RecommendedGameResponse"
+    RecommendedGameResponse:
+      type: object
+      properties:
+        score:
+          type: number
+          format: double
+        game:
+          $ref: "#/components/schemas/GameSummaryResponse"
     PageResponseOrderResponse:
       type: object
       properties:

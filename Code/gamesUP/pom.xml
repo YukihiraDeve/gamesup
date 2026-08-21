@@ -22,6 +22,7 @@
 		<maven.compiler.release>${java.version}</maven.compiler.release>
 		<jjwt.version>0.12.6</jjwt.version>
 		<springdoc.version>2.6.0</springdoc.version>
+		<mockwebserver.version>4.12.0</mockwebserver.version>
 		<jacoco.version>0.8.12</jacoco.version>
 	</properties>
 
@@ -94,6 +95,12 @@
 		<dependency>
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.squareup.okhttp3</groupId>
+			<artifactId>mockwebserver</artifactId>
+			<version>${mockwebserver.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

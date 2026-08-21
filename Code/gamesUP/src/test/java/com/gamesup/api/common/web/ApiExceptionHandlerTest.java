@@ -32,6 +32,7 @@ import com.gamesup.api.common.application.exception.BusinessRuleViolationExcepti
 import com.gamesup.api.common.application.exception.ConflictException;
 import com.gamesup.api.common.application.exception.ExternalServiceException;
 import com.gamesup.api.common.application.exception.ForbiddenOperationException;
+import com.gamesup.api.common.application.exception.InvalidExternalServiceResponseException;
 import com.gamesup.api.common.application.exception.ResourceNotFoundException;
 
 class ApiExceptionHandlerTest {
@@ -119,7 +120,12 @@ class ApiExceptionHandlerTest {
 						"/test/external-service",
 						503,
 						"External service unavailable",
-						"Recommendation service unavailable."));
+						"Recommendation service unavailable."),
+				Arguments.of(
+						"/test/invalid-external-response",
+						502,
+						"Invalid external service response",
+						"Recommendation response is invalid."));
 	}
 
 	@RestController
@@ -149,6 +155,11 @@ class ApiExceptionHandlerTest {
 		@GetMapping("/external-service")
 		void externalService() {
 			throw new ExternalServiceException("Recommendation service unavailable.");
+		}
+
+		@GetMapping("/invalid-external-response")
+		void invalidExternalResponse() {
+			throw new InvalidExternalServiceResponseException("Recommendation response is invalid.");
 		}
 
 		@GetMapping("/parameter")

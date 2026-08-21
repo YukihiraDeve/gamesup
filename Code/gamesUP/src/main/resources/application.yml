@@ -30,3 +30,6 @@ gamesup:
     secret: ${JWT_SECRET}
   recommendation:
     base-url: ${FASTAPI_URL:http://localhost:8000}
+    service-key: ${FASTAPI_SERVICE_KEY}
+    connect-timeout: ${FASTAPI_CONNECT_TIMEOUT:PT1S}
+    read-timeout: ${FASTAPI_READ_TIMEOUT:PT3S}

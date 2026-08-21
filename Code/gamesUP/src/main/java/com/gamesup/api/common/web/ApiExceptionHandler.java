@@ -23,6 +23,7 @@ import com.gamesup.api.common.application.exception.BusinessRuleViolationExcepti
 import com.gamesup.api.common.application.exception.ConflictException;
 import com.gamesup.api.common.application.exception.ExternalServiceException;
 import com.gamesup.api.common.application.exception.ForbiddenOperationException;
+import com.gamesup.api.common.application.exception.InvalidExternalServiceResponseException;
 import com.gamesup.api.common.application.exception.InvalidRequestException;
 import com.gamesup.api.common.application.exception.ResourceNotFoundException;
 
@@ -57,6 +58,13 @@ public class ApiExceptionHandler {
 	@ExceptionHandler(ExternalServiceException.class)
 	ProblemDetail handleExternalService(ExternalServiceException exception, HttpServletRequest request) {
 		return problem(HttpStatus.SERVICE_UNAVAILABLE, "External service unavailable", exception.getMessage(), request);
+	}
+
+	@ExceptionHandler(InvalidExternalServiceResponseException.class)
+	ProblemDetail handleInvalidExternalResponse(
+			InvalidExternalServiceResponseException exception,
+			HttpServletRequest request) {
+		return problem(HttpStatus.BAD_GATEWAY, "Invalid external service response", exception.getMessage(), request);
 	}
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)
