@@ -1,0 +1,5 @@
+# Dépendances nécessaires uniquement à la régénération du rapport final.
+# ReportLab 5.0.0 (BSD) et Pillow 12.3.0 (HPND) sont épinglés pour rendre
+# la production du PDF et des diagrammes déterministe.
+reportlab==5.0.0
+Pillow==12.3.0
