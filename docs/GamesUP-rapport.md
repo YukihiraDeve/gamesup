@@ -1,5 +1,7 @@
 # GamesUP - Rapport technique final
 
+Auteur : Valentin Bour
+
 Version 1.0 - 21 août 2026
 
 Périmètre : API Spring Boot, persistance MySQL, service de recommandation FastAPI et exécution Docker Compose
@@ -34,7 +36,7 @@ La campagne finale du backend Spring compte **113 tests réussis**. Le rapport J
 - C.18 - Recommandation KNN
 - Démonstration Docker Compose
 - Regard critique et améliorations
-- Traçabilité et reproduction du rapport
+- Traçabilité des preuves
 
 <!-- pagebreak -->
 
@@ -337,7 +339,7 @@ Avant l'entraînement, la seconde commande doit produire un 503 documenté plut�
 
 À court terme, construire le client Angular depuis le contrat OpenAPI, ajouter des tests de contrat consommateur et mettre les secrets dans un coffre. À moyen terme, ajouter OpenTelemetry, limiter le débit des routes d'authentification, automatiser le réentraînement et mesurer la qualité du classement. À plus long terme, tester une recommandation hybride, mettre en place une stratégie de déploiement progressif et valider les objectifs de reprise des données.
 
-# 8. Traçabilité et reproduction
+# 8. Traçabilité des preuves
 
 ## Index des preuves
 
@@ -352,32 +354,7 @@ Avant l'entraînement, la seconde commande doit produire un 503 documenté plut�
 | Workflow CI | `.github/workflows/ci.yml` |
 | Service KNN | `Code/CodeApiPython/gamesup_api/` |
 | Déploiement | `compose.yaml`, `.env.example`, `docs/docker.md` |
-| Diagrammes sources | `scripts/diagram_data.py` |
-| Générateur | `scripts/generate_report.py` |
-| Rapport source | `docs/GamesUP-rapport.md` |
-| PDF livré | `output/pdf/GamesUP-rapport.pdf` |
-
-## Régénérer les diagrammes et le PDF
-
-Le générateur utilise [ReportLab 5.0.0](https://pypi.org/project/reportlab/) pour la composition PDF et [Pillow 12.3.0](https://pypi.org/project/pillow/) pour les rendus PNG. Leurs versions sont épinglées dans `docs/requirements-report.txt`. Les polices Vera fournies par ReportLab sont embarquées dans le PDF ; aucune police système ni Graphviz n'est nécessaire.
-
-```bash
-python3 -m venv /tmp/gamesup-report-venv
-/tmp/gamesup-report-venv/bin/python -m pip install -r docs/requirements-report.txt
-/tmp/gamesup-report-venv/bin/python scripts/generate_report.py \
-  --coverage-xml Code/gamesUP/target/site/jacoco/jacoco.xml
-```
-
-L'option de couverture est volontairement stricte : la génération échoue si le XML ne contient pas exactement 1 212 lignes couvertes et 86 manquées. Pour régénérer le document depuis une copie propre, lancer d'abord `./mvnw clean verify` dans `Code/gamesUP`. Sans l'option, le PDF reste générable depuis ses seules sources documentaires.
-
-La sortie attendue comprend les quatre fichiers `docs/diagrams/*.png` et `output/pdf/GamesUP-rapport.pdf`. Les définitions natives des diagrammes sont centralisées dans `scripts/diagram_data.py` ; aucun fichier JSON n'est nécessaire. Pour l'assurance qualité documentaire, rendre ensuite chaque page avec Poppler et inspecter les images produites :
-
-```bash
-mkdir -p tmp/pdfs
-pdftoppm -png -r 120 output/pdf/GamesUP-rapport.pdf tmp/pdfs/GamesUP-rapport
-pdfinfo output/pdf/GamesUP-rapport.pdf
-```
 
 ## Conclusion
 
-La solution finale répond aux objectifs backend de l'étude de cas : architecture lisible, persistance Hibernate, contrat DTO, sécurité à deux rôles, tests Spring avec seuil bloquant et recommandation KNN réellement connectée. Les limites restent explicites : Angular n'est pas livré, le corpus réel manque encore et l'exploitation demanderait une gestion avancée des secrets, de l'observabilité et une évaluation ML continue. Ce rapport et ses diagrammes sont intégralement reproductibles depuis les sources versionnées.
+La solution finale répond aux objectifs backend de l'étude de cas : architecture lisible, persistance Hibernate, contrat DTO, sécurité à deux rôles, tests Spring avec seuil bloquant et recommandation KNN réellement connectée. Les limites restent explicites : Angular n'est pas livré, le corpus réel manque encore et l'exploitation demanderait une gestion avancée des secrets, de l'observabilité et une évaluation ML continue. Chaque affirmation de ce rapport renvoie à une preuve versionnée dans le dépôt : le code, les migrations, les tests et le workflow d'intégration continue.
